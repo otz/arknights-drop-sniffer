@@ -102,3 +102,8 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# local settings
+/ArknightsGameData
+/Pipfile.lock
+/battle_drops.txt
