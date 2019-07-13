@@ -8,6 +8,7 @@ import json
 import logging
 from collections import defaultdict
 from http.cookiejar import LWPCookieJar
+from multiprocessing import Process
 
 import requests
 from aadict import aadict
@@ -22,7 +23,7 @@ class CookiesHelper:
     def load_cookies(self, cookies):
         try:
             _cookies = LWPCookieJar(self.filename)
-            _cookies.load()
+            _cookies.load(ignore_discard=True)
             for cookie in _cookies:
                 cookies.set_cookie(copy.copy(cookie))
         except OSError:
@@ -32,7 +33,7 @@ class CookiesHelper:
         _cookies = LWPCookieJar(self.filename)
         for cookie in cookies:
             _cookies.set_cookie(copy.copy(cookie))
-        _cookies.save()
+        _cookies.save(ignore_discard=True)
 
 
 _penguin_stats_accept_stages = [
@@ -59,9 +60,21 @@ _penguin_stats_accept_stages = [
     'wk_armor_1', 'wk_armor_2', 'wk_armor_3', 'wk_armor_4', 'wk_armor_5'
 ]
 _penguin_stats_api_report = 'https://penguin-stats.io/PenguinStats/api/report'
-_penguin_stats_session = requests.session()
-_cookies_helper = CookiesHelper()
-_cookies_helper.load_cookies(_penguin_stats_session.cookies)
+
+
+def _do_post(data):
+    session = requests.session()
+    cookies_helper = CookiesHelper()
+    cookies_helper.load_cookies(session.cookies)
+    response = session.post(_penguin_stats_api_report,
+                            data=data,
+                            headers={'Content-Type': 'application/json'})
+    for header in response.request.headers.items():
+        logger.debug(f'request: {header}')
+    for header in response.headers.items():
+        logger.debug(f'response: {header}')
+    if response.cookies:
+        cookies_helper.save_cookies(session.cookies)
 
 
 def penguin_stats_report(response):
@@ -94,14 +107,4 @@ def penguin_stats_report(response):
         logger.error(f'furnitureNum:{furniture_num}')
         return
 
-    result = _penguin_stats_session.post(_penguin_stats_api_report,
-                                         data=report_content,
-                                         headers={'Content-Type': 'application/json'})
-    logger.info(f'{result.request.body}')
-    logger.info(f'{result.request.method} {result.request.url} {result.status_code}')
-    if result.cookies:
-        _cookies_helper.save_cookies(_penguin_stats_session.cookies)
-    for header in result.request.headers.items():
-        logger.debug(f'request: {header}')
-    for header in result.headers.items():
-        logger.debug(f'response: {header}')
+    Process(target=_do_post, args=(report_content,)).start()
