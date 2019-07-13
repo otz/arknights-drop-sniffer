@@ -69,6 +69,8 @@ def _do_post(data):
     response = session.post(_penguin_stats_api_report,
                             data=data,
                             headers={'Content-Type': 'application/json'})
+    if response.ok:
+        logger.info('OK')
     for header in response.request.headers.items():
         logger.debug(f'request: {header}')
     for header in response.headers.items():
