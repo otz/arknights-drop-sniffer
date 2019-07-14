@@ -75,7 +75,7 @@ def _do_post(data):
         logger.debug(f'request: {header}')
     for header in response.headers.items():
         logger.debug(f'response: {header}')
-    if response.cookies:
+    if response.cookies or any(h.cookies for h in response.history):
         cookies_helper.save_cookies(session.cookies)
 
 
@@ -103,10 +103,5 @@ def penguin_stats_report(response):
         "version": "v0.2.3"
     })
     report_content = json.dumps(report_content, separators=(',', ':'))
-
-    # TODO: decide what to do when furnitureNum != 0
-    if furniture_num != 0:
-        logger.error(f'furnitureNum:{furniture_num}')
-        return
 
     Process(target=_do_post, args=(report_content,)).start()

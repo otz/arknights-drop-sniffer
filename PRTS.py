@@ -13,7 +13,7 @@ from mitmproxy.tools.main import mitmdump
 from battle_drops import battle_drops
 from penguin_stats_report import penguin_stats_report
 
-logging.basicConfig(level=logging.INFO, format='%(process)d %(asctime)s %(levelname)s %(name)s %(message)s')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%H:%M:%S')
 
 
 class PRTS:
