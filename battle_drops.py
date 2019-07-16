@@ -59,7 +59,11 @@ _ark = _ArknightsGameData()
 
 def battle_drops(response):
     stages = list(response.playerDataDelta.modified.dungeon.stages.values())
-    assert len(stages) == 1
+    try:
+        assert len(stages) == 1
+    except AssertionError:
+        logger.exception(f'len(stages) = {len(stages)}')
+        raise
 
     if _ark.stages[stages[0].stageId].apCost - _ark.stages[stages[0].stageId].apFailReturn != 1:
         logger.debug(f'skip stage: {stages[0].stageId}')
