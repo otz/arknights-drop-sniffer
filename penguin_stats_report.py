@@ -3,6 +3,9 @@ Post battle drops data to Penguin Statistics
 
 more info: https://penguin-stats.io
 """
+__source__ = 'otz/arknights-drop-sniffer'
+__version__ = '0.2.4'
+
 import copy
 import json
 import logging
@@ -59,6 +62,22 @@ _penguin_stats_accept_stages = [
     'wk_fly_1', 'wk_fly_2', 'wk_fly_3', 'wk_fly_4', 'wk_fly_5',
     'wk_armor_1', 'wk_armor_2', 'wk_armor_3', 'wk_armor_4', 'wk_armor_5'
 ]
+_penguin_stats_accept_items = [
+    '2004', '2003', '2002', '2001',  # 作战记录
+    '30074', '30073',  # 醇
+    '30084', '30083',  # 锰
+    '30094', '30093',  # 研磨石
+    '30104', '30103',  # RMA70
+    '30014', '30013', '30012', '30011',  # 源岩
+    '30064', '30063', '30062', '30061',  # 装置
+    '30034', '30033', '30032', '30031',  # 酯
+    '30024', '30023', '30022', '30021',  # 糖
+    '30044', '30043', '30042', '30041',  # 铁
+    '30054', '30053', '30052', '30051',  # 酮
+    '3114', '3113', '3112',  # 碳
+    '3303', '3302', '3301',  # 书
+    '3003'  # 赤金
+]
 _penguin_stats_api_report = 'https://penguin-stats.io/PenguinStats/api/report'
 
 
@@ -91,7 +110,7 @@ def penguin_stats_report(response):
                     response.unusualRewards,
                     response.additionalRewards):
         for _drop in rewards:
-            if _drop.id != '4001' and _drop.count > 0:
+            if _drop.id in _penguin_stats_accept_items and _drop.count > 0:
                 drops[_drop.id] += _drop.count
     drops = [{"itemId": item, "quantity": count} for item, count in drops.items()]
     furniture_num = sum(_drop.count for _drop in response.furnitureRewards)
@@ -99,8 +118,8 @@ def penguin_stats_report(response):
         "stageId": stages[0].stageId,
         "furnitureNum": furniture_num,
         "drops": drops,
-        "source": "otz/arknights-drop-sniffer",
-        "version": "v0.2.3"
+        "source": __source__,
+        "version": __version__
     })
     report_content = json.dumps(report_content, separators=(',', ':'))
 
