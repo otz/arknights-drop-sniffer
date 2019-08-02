@@ -54,22 +54,17 @@ class _ArknightsGameData:
         return self.items[_id]['name']
 
 
-_ark = _ArknightsGameData()
+_ARK = _ArknightsGameData()
 
 
-def battle_drops(response):
-    stages = list(response.playerDataDelta.modified.dungeon.stages.values())
-    try:
-        assert len(stages) == 1
-    except AssertionError:
-        logger.exception(f'len(stages) = {len(stages)}')
-        raise
-
-    if _ark.stages[stages[0].stageId].apCost - _ark.stages[stages[0].stageId].apFailReturn != 1:
-        logger.debug(f'skip stage: {stages[0].stageId}')
+def battle_drops(response, stage_id):
+    if _ARK.stages[stage_id].apCost - _ARK.stages[stage_id].apFailReturn != 1:
+        logger.debug(f'skip stage: {stage_id}')
         return
 
     now = datetime.now().isoformat(timespec='seconds')
+    code = _ARK.stages[stage_id].code
+    complete_times = response.playerDataDelta.modified.dungeon.stages[stage_id].completeTimes
     drops = defaultdict(int)
     for rewards in (response.rewards,
                     response.unusualRewards,
@@ -77,13 +72,10 @@ def battle_drops(response):
                     response.furnitureRewards):
         for _drop in rewards:
             if _drop.count > 0:
-                name = _ark.get_name(_drop.type, _drop.id)
+                name = _ARK.get_name(_drop.type, _drop.id)
                 drops[name] += _drop.count
-    rewards = ','.join(f'{name},{count}' for name, count in drops.items())
-    rewards = (f'{now},'
-               f'{_ark.stages[stages[0].stageId].code},'
-               f'{stages[0].completeTimes},'
-               f'{rewards}')
+    drops = ','.join(f'{name},{count}' for name, count in drops.items())
+    record = f'{now},{code},{complete_times},{drops}'
     with open('battle_drops.txt', 'a', encoding='utf-8') as _fp:
-        _fp.write(f'{rewards}\n')
-    logger.info(f'{rewards}')
+        _fp.write(f'{record}\n')
+    logger.info(f'{record}')

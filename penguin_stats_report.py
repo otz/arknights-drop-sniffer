@@ -4,7 +4,7 @@ Post battle drops data to Penguin Statistics
 more info: https://penguin-stats.io
 """
 __source__ = 'otz/arknights-drop-sniffer'
-__version__ = '0.2.4'
+__version__ = '0.2.5'
 
 import copy
 import json
@@ -14,7 +14,6 @@ from http.cookiejar import LWPCookieJar
 from multiprocessing import Process
 
 import requests
-from aadict import aadict
 
 logger = logging.getLogger(__name__)
 
@@ -98,11 +97,9 @@ def _do_post(data):
         cookies_helper.save_cookies(session.cookies)
 
 
-def penguin_stats_report(response):
-    stages = list(response.playerDataDelta.modified.dungeon.stages.values())
-
-    if stages[0].stageId not in _penguin_stats_accept_stages:
-        logger.debug(f'skip stage: {stages[0].stageId}')
+def penguin_stats_report(response, stage_id):
+    if stage_id not in _penguin_stats_accept_stages:
+        logger.debug(f'skip stage: {stage_id}')
         return
 
     drops = defaultdict(int)
@@ -114,13 +111,13 @@ def penguin_stats_report(response):
                 drops[_drop.id] += _drop.count
     drops = [{"itemId": item, "quantity": count} for item, count in drops.items()]
     furniture_num = sum(_drop.count for _drop in response.furnitureRewards)
-    report_content = aadict({
-        "stageId": stages[0].stageId,
+    report_content = {
+        "stageId": stage_id,
         "furnitureNum": furniture_num,
         "drops": drops,
         "source": __source__,
         "version": __version__
-    })
+    }
     report_content = json.dumps(report_content, separators=(',', ':'))
 
     Process(target=_do_post, args=(report_content,)).start()
