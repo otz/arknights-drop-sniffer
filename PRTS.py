@@ -7,16 +7,18 @@ import json
 import logging
 import socket
 
-from aadict import aadict
-from mitmproxy.http import HTTPFlow
-from mitmproxy.tools.main import mitmdump
+import aadict
+import mitmproxy.ctx
+import mitmproxy.http
+import mitmproxy.tools.main
+import tornado.httpserver
+import tornado.log
+import tornado.web
 
 from battle_drops import battle_drops
 from penguin_stats_report import penguin_stats_report
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%H:%M:%S')
-
-IP_ADDRESS = (socket.gethostbyname('ak-gs.hypergryph.com'), 8443)
 
 
 class PRTS:
@@ -31,13 +33,12 @@ class PRTS:
                     self.logger.debug(f'get stageId from response:{stage.stageId}')
                     return stage.stageId
 
-    def response(self, flow: HTTPFlow):
-        if flow.server_conn.ip_address == IP_ADDRESS:
+    def response(self, flow: mitmproxy.http.HTTPFlow):
+        if flow.request.host == 'ak-gs.hypergryph.com':
             if flow.request.path == '/quest/battleFinish':
-                response = aadict.d2ar(json.loads(flow.response.text))
+                response = aadict.aadict.d2ar(json.loads(flow.response.text))
                 stage_id = self._get_stage_id(response)
                 if stage_id:
-                    # noinspection PyBroadException
                     try:
                         battle_drops(response, stage_id)
                         penguin_stats_report(response, stage_id)
@@ -47,10 +48,26 @@ class PRTS:
 
 addons = [PRTS()]
 
+
+class ProxyAutoConfig(tornado.web.RequestHandler):
+    __PAC__ = ('function FindProxyForURL(url, host) {\r\n'
+               '  if (dnsDomainIs(host, "ak-gs.hypergryph.com")) {return __PROXY__;}\r\n'
+               '  return "DIRECT";\r\n'
+               '}')
+
+    def get(self):
+        self.set_header("Content-Type", "application/x-ns-proxy-autoconfig")
+        proxy_host = socket.gethostbyname(socket.getfqdn())
+        proxy_port = mitmproxy.ctx.options.listen_port
+        self.write(self.__PAC__.replace('__PROXY__', f'"PROXY {proxy_host}:{proxy_port}"'))
+
+
+def main():
+    app = tornado.web.Application([(r"/pac", ProxyAutoConfig)])
+    pac_server = tornado.httpserver.HTTPServer(app)
+    pac_server.listen(8081)
+    mitmproxy.tools.main.mitmdump(('--quiet', '--scripts', __file__))
+
+
 if __name__ == '__main__':
-    def main():
-        mitmdump(('--quiet', '--scripts', __file__))
-        # mitmdump(('--verbose', '--flow-detail', '2', '--scripts', __file__))
-
-
     main()
