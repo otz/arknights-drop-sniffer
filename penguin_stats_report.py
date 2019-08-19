@@ -3,8 +3,8 @@ Post battle drops data to Penguin Statistics
 
 more info: https://penguin-stats.io
 """
-__source__ = 'otz/arknights-drop-sniffer'
-__version__ = '0.2.5'
+__source__ = 'arknights-drop-sniffer'
+__version__ = '0.2.6'
 
 import copy
 import json
@@ -25,7 +25,7 @@ class CookiesHelper:
     def load_cookies(self, cookies):
         try:
             _cookies = LWPCookieJar(self.filename)
-            _cookies.load(ignore_discard=True)
+            _cookies.load()
             for cookie in _cookies:
                 cookies.set_cookie(copy.copy(cookie))
         except OSError:
@@ -35,7 +35,7 @@ class CookiesHelper:
         _cookies = LWPCookieJar(self.filename)
         for cookie in cookies:
             _cookies.set_cookie(copy.copy(cookie))
-        _cookies.save(ignore_discard=True)
+        _cookies.save()
 
 
 _penguin_stats_accept_stages = [
