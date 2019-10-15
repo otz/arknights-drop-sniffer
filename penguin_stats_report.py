@@ -4,7 +4,7 @@ Post battle drops data to Penguin Statistics
 more info: https://penguin-stats.io
 """
 __source__ = 'arknights-drop-sniffer'
-__version__ = '0.2.6'
+__version__ = '0.2.7'
 
 import copy
 import json
@@ -40,6 +40,7 @@ class CookiesHelper:
 
 _penguin_stats_accept_stages = [
     'a001_01', 'a001_02', 'a001_03', 'a001_04', 'a001_05', 'a001_06',
+    'act4d0_01', 'act4d0_02', 'act4d0_03', 'act4d0_04', 'act4d0_05',
     'main_00-01', 'main_00-02', 'main_00-03', 'main_00-04', 'main_00-05', 'main_00-06', 'main_00-07', 'main_00-08',
     'main_00-09', 'main_00-10', 'main_00-11',
     'main_01-01', 'main_01-03', 'main_01-04', 'main_01-05', 'main_01-06', 'main_01-07', 'main_01-08', 'main_01-09',
