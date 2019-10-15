@@ -1,1 +1,1 @@
-# arknights-drop-sniffer
+Removed.
